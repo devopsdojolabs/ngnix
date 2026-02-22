@@ -1,0 +1,31 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: nginx-multi-env-multi-cluster
+  namespace: argocd
+spec:
+  generators:
+  - list:
+      elements:
+      - env: dev
+        namespace: dev
+        cluster: https://kubernetes.default.svc
+      - env: prod
+        namespace: prod
+        cluster: https://kubernetes.default.svc
+  template:
+    metadata:
+      name: nginx-{{env}}
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/devopsdojolabs/ngnix
+        targetRevision: main
+        path: 'application-set/{{env}}'
+      destination:
+        server: '{{cluster}}'
+        namespace: '{{namespace}}'
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
